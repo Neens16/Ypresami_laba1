@@ -1,8 +1,8 @@
 #include <dirent.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <string.h>
 
 #define DIRMASK 100000000000000
 
@@ -19,7 +19,6 @@ int checkOnDir(char *fileName) {
       answer = 1;
     }
   } else {
-    //printf("stat > %d (%s)\n", stat(fileName, &stbuf), fileName);
     answer = -1;
   }
   return answer;
@@ -28,23 +27,18 @@ int checkOnDir(char *fileName) {
 int checkDirForDir(char *dirname, int mod) {
   DIR *chieldDir = opendir(dirname);
   struct dirent *record = readdir(chieldDir);
-  char str[256];
-  while (record) {
+  char str[256], check = 1;
+  while (record && check) {
     strcpy(str, dirname);
     strcat(str, "/");
     strcat(str, record->d_name);
     if (mod && !checkOnDir(str)) {
-      rewinddir(chieldDir);
-      closedir(chieldDir);
-      return 0;  ////////////
-    } else if (!mod && record->d_name[0] != '.' && !checkOnDir(str)){
-      //printf("%s\n", str);
-      if (!checkDirForDir(str, 1)){
+      check = 0;
+    } else if (!mod && record->d_name[0] != '.' && !checkOnDir(str)) {
+      if (!checkDirForDir(str, 1)) {
         printf("RESULT >>>> %s\n", dirname);
+        check = 0;
       }
-      rewinddir(chieldDir);
-      closedir(chieldDir);
-      return 0;  ////////////
     }
     record = readdir(chieldDir);
   }
@@ -60,11 +54,9 @@ int main(int argc, char *argv[]) {
     DIR *parentDir = opendir(str);
     struct dirent *record = readdir(parentDir);
     while (record) {
-      //printf("%lu == %s (%s)\n", record->d_ino, record->d_name, argv[1]);
       strcpy(str, argv[1]);
       strcat(str, "/");
       strcat(str, record->d_name);
-      //printf("%s\n", str);
       if (record->d_name[0] != '.' && !checkOnDir(str)) {
         checkDirForDir(str, 0);
       }
