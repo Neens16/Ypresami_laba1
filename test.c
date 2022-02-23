@@ -67,6 +67,26 @@ START_TEST(checker_test_nan) {
   ck_assert_int_eq(my3.count, my_3.count);
   ck_assert_str_eq(my3.name[0], my_3.name[0]);
   ck_assert_int_eq(my3.error, my_3.error);
+
+  ////////////////////
+
+  result my4 = {{}, 0, -1};
+  char *argv4[3];
+  argv4[1] = "h";
+  result my_4 = checker(2, argv4);
+  ck_assert_int_eq(my4.count, my_4.count);
+  ck_assert_str_eq(my4.name[0], my_4.name[0]);
+  ck_assert_int_eq(my4.error, my_4.error);
+
+  ////////////////////
+
+  result my5 = {{}, 0, 3};
+  char *argv5[3];
+  argv5[1] = "";
+  result my_5 = checker(1, argv5);
+  ck_assert_int_eq(my5.count, my_5.count);
+  ck_assert_str_eq(my5.name[0], my_5.name[0]);
+  ck_assert_int_eq(my5.error, my_5.error);
 }
 END_TEST
 
@@ -91,19 +111,19 @@ END_TEST
 
 START_TEST(check_levels_test) {
   int ans1 = 2;
-  int ans_1 = checkLevels("../../");
+  int ans_1 = countLevels("../../");
   ck_assert_int_eq(ans1, ans_1);
 
   ////////////////////
 
   int ans2 = 6;
-  int ans_2 = checkLevels("../../../../../../");
+  int ans_2 = countLevels("../../../../../../");
   ck_assert_int_eq(ans2, ans_2);
 
   ////////////////////
 
   int ans3 = 0;
-  int ans_3 = checkLevels("finder.h");
+  int ans_3 = countLevels("finder.h");
   ck_assert_int_eq(ans3, ans_3);
 }
 END_TEST

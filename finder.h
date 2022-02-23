@@ -6,7 +6,7 @@ typedef struct {
   int error;
 } result;
 
-int checkLevels(char *src);
+int countLevels(char *src);
 int checkOnDir(char *fileName);
 int checkDirForDir(char *dirname, int mod);
 result checker(int argc, char *argv[]);

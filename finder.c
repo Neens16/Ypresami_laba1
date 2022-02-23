@@ -8,12 +8,12 @@
 #define KRED "\x1B[31m"
 #define KYEL "\x1B[33m"
 
-int checkLevels(char *src) {
-  int i = 0, res = 0;
+int countLevels(char *src) {
+  int i = 0, level = 0;
   while (src[i] != '\0') {
-    if (src[i++] == '/') res++;
+    if (src[i++] == '/') level++;
   }
-  return res;
+  return level;
 }
 
 // Функция checkOnDir проверяет файл с названием dirname на то что это каталог.
@@ -35,8 +35,8 @@ int checkOnDir(char *fileName) {
 }
 
 int checkDirForDir(char *dirname, int mod) {
-  DIR *chieldDir = opendir(dirname);
-  struct dirent *record = readdir(chieldDir);
+  DIR *childDir = opendir(dirname);
+  struct dirent *record = readdir(childDir);
   char str[256], check = 0;
   while (record && !check) {
     strcpy(str, dirname);
@@ -49,10 +49,10 @@ int checkDirForDir(char *dirname, int mod) {
         check = 1;
       }
     }
-    record = readdir(chieldDir);
+    record = readdir(childDir);
   }
-  rewinddir(chieldDir);
-  closedir(chieldDir);
+  rewinddir(childDir);
+  closedir(childDir);
   return check;
 }
 
@@ -62,38 +62,42 @@ result checker(int argc, char *argv[]) {
   my.count = 0;
   char str[100];
   int y;
-  strcpy(str, argv[1]);
-  checkLevels(str);
-  if (!checkOnDir(str)) {
-    DIR *parentDir = opendir(str);
-    if (parentDir != NULL) {
-      struct dirent *record = readdir(parentDir);
-      while (record) {
-        strcpy(str, argv[1]);
-        strcat(str, "/");
-        strcat(str, record->d_name);
-        if (record->d_name[0] != '.' && !checkOnDir(str) &&
-            strcmp(record->d_name, "tmp")) {
-          y = checkDirForDir(str, 0);
-          if (y == 1) {
-            strcpy(my.name[my.count], record->d_name);
-            my.count += 1;
+  if (argc == 1) {
+    my.error = 3;  // no input value
+  } else {
+    strcpy(str, argv[1]);
+    countLevels(str);
+    if (!checkOnDir(str)) {
+      DIR *parentDir = opendir(str);
+      if (parentDir != NULL) {
+        struct dirent *record = readdir(parentDir);
+        while (record) {
+          strcpy(str, argv[1]);
+          strcat(str, "/");
+          strcat(str, record->d_name);
+          if (record->d_name[0] != '.' && !checkOnDir(str) &&
+              strcmp(record->d_name, "tmp")) {
+            y = checkDirForDir(str, 0);
+            if (y == 1) {
+              strcpy(my.name[my.count], record->d_name);
+              my.count += 1;
+            }
           }
+          record = readdir(parentDir);
         }
-        record = readdir(parentDir);
+        if (my.count == 0) {
+          my.error = -1;  // not found
+        }
+        rewinddir(parentDir);
+        closedir(parentDir);
+
+      } else {
+        my.error = 2;  // problems with directory
       }
-      if (my.count == 0) {
-        my.error = -1;  // not found
-      }
-      rewinddir(parentDir);
-      closedir(parentDir);
 
     } else {
-      my.error = 2;  // problems with directory
+      my.error = 1;  // not a directory
     }
-
-  } else {
-    my.error = 1;  // not a directory
   }
 
   return my;
@@ -111,8 +115,10 @@ void print_result(result res) {
             "при открытии директории\n");
   } else if (res.error == 1) {
     fprintf(stderr, KRED "Директории с таким названием не существует\n");
-  } else {
+  } else if (res.error == -1) {
     fprintf(stdout, KYEL "В данном каталоге подходящих каталогов не найдено\n");
+  } else {
+    fprintf(stderr, KRED "Каталог не задан\n");
   }
 }
 

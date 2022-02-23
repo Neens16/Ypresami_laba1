@@ -37,8 +37,8 @@ rebuild_tests:
 	rm -r report
 	rm Test
 	rm gcov_report.info
-	gcc -c -Wall -pthread -fprofile-arcs -ftest-coverage test.c -o test.o
-	gcc -c -Wall -pthread -fprofile-arcs -ftest-coverage finder.c -o finder.o
+	gcc -c -Wall -Wextra -Werror -pthread -fprofile-arcs -ftest-coverage test.c -o test.o
+	gcc -c -Wall -Wextra -Werror -pthread -fprofile-arcs -ftest-coverage finder.c -o finder.o
 	gcc test.o finder.o -lcheck_pic -pthread -lrt -lm -lsubunit -lgcov -coverage -o Test
 	./Test
 	lcov -t "gcov_report" -o gcov_report.info -c -d .
