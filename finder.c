@@ -1,17 +1,19 @@
+#include "finder.h"
+
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "finder.h"
+#define KRED "\x1B[31m"
+#define KYEL "\x1B[33m"
 
-int LEVELS = 0;
-
-void checkLevels(char *src){
-  int i = 0;
-  while(src[i] != '\0') {
-    if (src[i++] == '/') LEVELS++;
+int checkLevels(char *src) {
+  int i = 0, res = 0;
+  while (src[i] != '\0') {
+    if (src[i++] == '/') res++;
   }
+  return res;
 }
 
 // Функция checkOnDir проверяет файл с названием dirname на то что это каталог.
@@ -35,7 +37,7 @@ int checkOnDir(char *fileName) {
 int checkDirForDir(char *dirname, int mod) {
   DIR *chieldDir = opendir(dirname);
   struct dirent *record = readdir(chieldDir);
-  char str[256], check = 0, *ans = 0;
+  char str[256], check = 0;
   while (record && !check) {
     strcpy(str, dirname);
     strcat(str, "/");
@@ -44,14 +46,7 @@ int checkDirForDir(char *dirname, int mod) {
       check = 1;
     } else if (!mod && record->d_name[0] != '.' && !checkOnDir(str)) {
       if (checkDirForDir(str, 1) == 1) {
-        int i = LEVELS; 
-        ans = strtok(dirname, "/");
-        while (i > 0) {
-          ans = strtok(NULL, "/");
-          i--;
-        }
-        //printf("%s\n", ans);
-        check = 2;
+        check = 1;
       }
     }
     record = readdir(chieldDir);
@@ -71,40 +66,59 @@ result checker(int argc, char *argv[]) {
   checkLevels(str);
   if (!checkOnDir(str)) {
     DIR *parentDir = opendir(str);
-    struct dirent *record = readdir(parentDir);
-    while (record) {
-      strcpy(str, argv[1]);
-      strcat(str, "/");
-      strcat(str, record->d_name);
-      if (record->d_name[0] != '.' && !checkOnDir(str) && strcmp(record->d_name, "tmp")) {
-        y = checkDirForDir(str, 0);
-        if (y == 2) {
-          strcpy(my.name[my.count], record->d_name);
-          my.count += 1;
-          //printf("%s\n", record->d_name);
+    if (parentDir != NULL) {
+      struct dirent *record = readdir(parentDir);
+      while (record) {
+        strcpy(str, argv[1]);
+        strcat(str, "/");
+        strcat(str, record->d_name);
+        if (record->d_name[0] != '.' && !checkOnDir(str) &&
+            strcmp(record->d_name, "tmp")) {
+          y = checkDirForDir(str, 0);
+          if (y == 1) {
+            strcpy(my.name[my.count], record->d_name);
+            my.count += 1;
+          }
         }
+        record = readdir(parentDir);
       }
-      record = readdir(parentDir);
+      if (my.count == 0) {
+        my.error = -1;  // not found
+      }
+      rewinddir(parentDir);
+      closedir(parentDir);
+
+    } else {
+      my.error = 2;  // problems with directory
     }
-    rewinddir(parentDir);
-    closedir(parentDir);
+
   } else {
-    my.error = 1;
-    //printf("ERROR %s IS NOT DIRECTORY\n", str);
+    my.error = 1;  // not a directory
   }
-  
+
   return my;
 }
 
+#ifdef MAIN
+void print_result(result res) {
+  if (!res.error) {
+    for (int i = 0; i < res.count; i++) {
+      fprintf(stdout, "%s\n", res.name[i]);
+    }
+  } else if (res.error == 2) {
+    fprintf(stderr, KRED
+            "Возникла ошибка "
+            "при открытии директории\n");
+  } else if (res.error == 1) {
+    fprintf(stderr, KRED "Директории с таким названием не существует\n");
+  } else {
+    fprintf(stdout, KYEL "В данном каталоге подходящих каталогов не найдено\n");
+  }
+}
 
 int main(int argc, char *argv[]) {
   result res = checker(argc, argv);
-  if (!res.error) {
-    for (int i = 0; i < res.count; i++){
-      printf("%s\n", res.name[i]);
-    }
-  } else {
-    printf("NAN");
-  }
+  print_result(res);
   return 0;
 }
+#endif
