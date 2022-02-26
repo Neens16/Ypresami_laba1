@@ -101,7 +101,8 @@ result checker(int argc, char *argv[]) {
           strcat(str, "/");
           strcat(str, record->d_name);  // Составление пути до прочитанной
                                         // записи в директории
-          if (record->d_name[0] != '.' && !checkOnDir(str)) {
+          if (strcmp(record->d_name, ".") && strcmp(record->d_name, "..") &&
+              !checkOnDir(str)) {
             y = checkDirForDir(str, 0);  // Если найдена подходящая директория
             if (y == 1) {
               strcpy(my.name[my.count], record->d_name);
