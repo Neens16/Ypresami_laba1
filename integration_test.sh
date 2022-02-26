@@ -1,3 +1,8 @@
+echo "TESTING C PROGRAM FOR CORRECT OUTPUT"
+echo "----------------------------------"
+
+
+
 ./myprog ../../ >> result_c.txt
 echo  ".brew
 .config

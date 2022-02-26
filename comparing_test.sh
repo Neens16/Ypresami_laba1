@@ -1,3 +1,7 @@
+echo "COMPARE C PROGRAM AND BASH SCRIPT"
+echo "----------------------------------"
+
+
 ./myprog ../../ >> result_c.txt
 ./my_script.sh ../../ >> result_bash.txt
 diff -s result_c.txt result_bash.txt
